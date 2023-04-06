@@ -10,7 +10,7 @@ git checkout dev
 
 cd pythonProject
 
-python3 pythonProject/pacman.py
+python3 pacman.py
 
 Если ошибка из-за звука mixer, выполнить эти две строчки:
 
