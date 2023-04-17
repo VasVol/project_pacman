@@ -1,5 +1,4 @@
 import sys
-
 sys.path.append('src/')
 import Globals
 from boards import boards
@@ -324,7 +323,7 @@ class Ghost(Creature):
     def change_next_direction_using_random(self, possible_directions: list,
                                            graphics: 'Graphics') -> None:
         best_direction = possible_directions[randint(0, 2)]
-        for i in range(Globals.random_ghost_move_number_of_attempts):
+        for _ in range(Globals.random_ghost_move_number_of_attempts):
             if not self.can_move_in_direction(best_direction, graphics):
                 best_direction = possible_directions[randint(0, 2)]
         self.next_direction = best_direction
