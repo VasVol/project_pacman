@@ -5,21 +5,18 @@
 ## Установка:
 
 ```
+git clone git@github.com:VasVol/project_pacman.git
 
-1) git clone git@github.com:VasVol/project_pacman.git
+cd project_pacman
 
-2) cd project_pacman
-
-3) git checkout dev
-
-4) проверить, что установлено всё из requirements.txt
-
+git checkout dev
 ```
+проверить, что установлено всё из requirements.txt
 
 ## Запуск:
 
 ```
 
-1) python3 main.py
+python3 main.py
 
 ```
