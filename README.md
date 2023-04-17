@@ -10,7 +10,7 @@ git clone git@github.com:VasVol/project_pacman.git
 cd project_pacman
 git checkout dev
 ```
-проверить, что установлено всё из requirements.txt
+Необходимо проверить, что установлено всё из requirements.txt
 
 ## Запуск:
 ```
