@@ -8,15 +8,6 @@ from pygame import mixer
 from time import time
 
 
-def all_coins_collected():
-    for i in range(len(observer.graphics.board)):
-        for j in range(len(observer.graphics.board[i])):
-            if observer.graphics.board[i][j] in [1, 2]:
-                return
-    observer.game_won = True
-    observer.sounds.game_music.stop()
-
-
 class Score:
     def __init__(self):
         self.score_for_eating_small_coin = 10
@@ -48,12 +39,12 @@ class Graphics:
         self.flicker = False
         self.flicker_counter = 0
 
-    def draw_maze_pacman_and_ghosts(self):
+    def draw_maze_pacman_and_ghosts(self, pacman: 'Pacman', ghosts: list['Ghost']) -> None:
         self.draw_maze()
-        self.draw_pacman()
-        self.draw_ghosts()
+        self.draw_pacman(pacman)
+        self.draw_ghosts(ghosts)
 
-    def get_images(self):
+    def get_images(self) -> tuple:
         k = self.stretch_factor
         dimensions = ((self.cell_x_size + 16) * k, (self.cell_y_size + 16) * k)
         pacman_images = []
@@ -68,59 +59,59 @@ class Graphics:
         ghosts_images = [red_img, pink_img, blue_img, orange_img]
         return pacman_images, ghosts_images, spooked_img, dead_img
 
-    def stretch(self, array):
+    def stretch(self, array: list) -> list:
         return [elem * self.stretch_factor for elem in array]
 
-    def draw_misc(self):
+    def draw_misc(self, score: int, powerup: bool, lives: int, game_over: bool, game_won: bool) -> None:
         k = self.stretch_factor
-        score_text = self.font.render(f'Score: {observer.score.score}', True, 'white')
+        score_text = self.font.render(f'Score: {score}', True, 'white')
         self.screen.blit(score_text, (10 * k, 920 * k))
-        if observer.powerup:
+        if powerup:
             pygame.draw.circle(self.screen, 'blue', (140 * k, 930 * k), 15 * k)
-        for i in range(observer.score.lives):
+        for i in range(lives):
             self.screen.blit(pygame.transform.scale(self.pacman_images[0], (30 * k, 30 * k)),
                              ((650 + i * 40) * k, 915 * k))
-        if observer.game_over:
+        if game_over:
             text = self.font.render('Game over! Space bar to restart!', True, 'red')
-        elif observer.game_won:
+        elif game_won:
             text = self.font.render('Victory! Space bar to restart!', True, 'green')
-        if observer.game_over or observer.game_won:
+        if game_over or game_won:
             pygame.draw.rect(self.screen, 'white', ((50 * k, 200 * k), (800 * k, 300 * k)), 0, round(10 * k))
             pygame.draw.rect(self.screen, 'dark gray', ((70 * k, 220 * k), (760 * k, 260 * k)), 0, round(10 * k))
             self.screen.blit(text, [100 * k, 300 * k])
 
-    def draw_ready_text(self):
+    def draw_ready_text(self) -> None:
         k = self.stretch_factor
         text = self.big_font.render('READY!', True, 'red')
         self.screen.blit(text, (390 * k, 490 * k))
 
-    def draw_ghosts(self):
+    def draw_ghosts(self, ghosts: list['Ghost']) -> None:
         k = self.stretch_factor
-        for i in range(len(observer.ghosts)):
-            coords = (observer.ghosts[i].y - 5 * k, observer.ghosts[i].x - 5 * k)
-            if observer.ghosts[i].dead:
+        for i in range(len(ghosts)):
+            coords = (ghosts[i].y - 5 * k, ghosts[i].x - 5 * k)
+            if ghosts[i].dead:
                 self.screen.blit(self.dead_img, coords)
-            elif observer.ghosts[i].powerup:
+            elif ghosts[i].powerup:
                 self.screen.blit(self.spooked_img, coords)
             else:
                 self.screen.blit(self.ghosts_images[i], coords)
 
-    def draw_pacman(self):
+    def draw_pacman(self, pacman: 'Pacman') -> None:
         k = self.stretch_factor
         self.change_pacman_image_counter += 1
         if self.change_pacman_image_counter % self.change_pacman_image_speed == 0:
             self.pacman_image_number = (self.pacman_image_number + 1) % 4
-        coords = (observer.pacman.y - 8 * k, observer.pacman.x - 8 * k)
-        if observer.pacman.direction == (0, 1):
+        coords = (pacman.y - 8 * k, pacman.x - 8 * k)
+        if pacman.direction == (0, 1):
             self.screen.blit(self.pacman_images[self.pacman_image_number], coords)
-        elif observer.pacman.direction == (0, -1):
+        elif pacman.direction == (0, -1):
             self.screen.blit(pygame.transform.flip(self.pacman_images[self.pacman_image_number], True, False), coords)
-        elif observer.pacman.direction == (-1, 0):
+        elif pacman.direction == (-1, 0):
             self.screen.blit(pygame.transform.rotate(self.pacman_images[self.pacman_image_number], 90), coords)
-        elif observer.pacman.direction == (1, 0):
+        elif pacman.direction == (1, 0):
             self.screen.blit(pygame.transform.rotate(self.pacman_images[self.pacman_image_number], 270), coords)
 
-    def draw_maze(self):
+    def draw_maze(self) -> None:
         k = self.stretch_factor
         x = self.cell_x_size
         y = self.cell_y_size
@@ -161,17 +152,17 @@ class Graphics:
                                      ((j + 1) * y, (i + 0.5) * x), round(3 * k))
 
 
-def play_the_sound_stop_everything_else(sound):
+def play_the_sound_stop_everything_else(sound: 'pygame.mixer.Sound') -> None:
     channel = sound.play()
     while channel.get_busy():
         pass
 
 
-def play_sound_loop(sound):
+def play_sound_loop(sound: 'pygame.mixer.Sound') -> None:
     sound.play(-1)
 
 
-def stop_playing_sound(sound):
+def stop_playing_sound(sound: 'pygame.mixer.Sound') -> None:
     sound.stop()
 
 
@@ -184,7 +175,7 @@ class Sounds:
 
 
 class Creature:
-    def __init__(self, direction, speed, x_start, y_start):
+    def __init__(self, direction: tuple, speed: float, x_start: float, y_start: float):
         self.speed = speed
         self.direction = direction
         self.next_direction = self.direction
@@ -194,56 +185,56 @@ class Creature:
         self.y = self.y_start
         self.possible_directions = [(0, 1), (0, -1), (-1, 0), (1, 0)]
 
-    def is_collision(self):
+    def is_collision(self, graphics: 'Graphics') -> bool:
         can_move_to = [0, 1, 2]
         if (self.__class__.__name__ == 'Ghost') and not (self.powerup and not self.dead):
             can_move_to.append(9)
-        k = observer.graphics.stretch_factor
-        for x in range(len(observer.graphics.board)):
-            for y in range(len(observer.graphics.board[x])):
-                if (observer.graphics.board[x][y] not in can_move_to) and \
-                        (abs(self.x - x * observer.graphics.cell_x_size) < observer.graphics.cell_x_size - 1 * k) \
-                        and (abs(self.y - y * observer.graphics.cell_y_size) < observer.graphics.cell_y_size - 1 * k):
+        k = graphics.stretch_factor
+        for x in range(len(graphics.board)):
+            for y in range(len(graphics.board[x])):
+                if (graphics.board[x][y] not in can_move_to) and \
+                        (abs(self.x - x * graphics.cell_x_size) < graphics.cell_x_size - 1 * k) \
+                        and (abs(self.y - y * graphics.cell_y_size) < graphics.cell_y_size - 1 * k):
                     return True
         return False
 
-    def can_move_in_direction(self, direction):
+    def can_move_in_direction(self, direction: tuple, graphics: 'Graphics') -> bool:
         self.shift(direction)
-        if self.is_collision():
+        if self.is_collision(graphics):
             self.shift(tuple(-elem for elem in direction))
             return False
         self.shift(tuple(-elem for elem in direction))
         return True
 
-    def shift(self, direction):
+    def shift(self, direction: tuple) -> None:
         self.x += direction[0] * self.speed
         self.y += direction[1] * self.speed
 
-    def move(self):
-        if self.can_move_in_direction(self.next_direction):
+    def move(self, graphics: 'Graphics') -> None:
+        if self.can_move_in_direction(self.next_direction, graphics):
             self.shift(self.next_direction)
             self.direction = self.next_direction
-        elif self.can_move_in_direction(self.direction):
+        elif self.can_move_in_direction(self.direction, graphics):
             self.shift(self.direction)
 
-        if (self.y > observer.graphics.window_y_size - 2 * observer.graphics.cell_y_size) and (
+        if (self.y > graphics.window_y_size - 2 * graphics.cell_y_size) and (
                 self.direction == (0, 1)) and (
-                observer.graphics.cell_x_size * 13 <= self.x <= observer.graphics.cell_x_size * 17):
+                graphics.cell_x_size * 13 <= self.x <= graphics.cell_x_size * 17):
             self.y = 0
-        if (self.y < 2 * observer.graphics.cell_y_size) and (self.direction == (0, -1)) and \
-                (observer.graphics.cell_x_size * 13 <= self.x <= observer.graphics.cell_x_size * 17):
-            self.y = observer.graphics.window_y_size - observer.graphics.cell_y_size
+        if (self.y < 2 * graphics.cell_y_size) and (self.direction == (0, -1)) and \
+                (graphics.cell_x_size * 13 <= self.x <= graphics.cell_x_size * 17):
+            self.y = graphics.window_y_size - graphics.cell_y_size
 
-    def rounded_coordinates(self):
-        return round(self.x / observer.graphics.cell_x_size), round(self.y / observer.graphics.cell_y_size)
+    def rounded_coordinates(self, graphics: 'Graphics') -> tuple:
+        return round(self.x / graphics.cell_x_size), round(self.y / graphics.cell_y_size)
 
 
 class Pacman(Creature):
-    def __init__(self, direction, speed, x_start, y_start):
+    def __init__(self, direction: tuple, speed: float, x_start: float, y_start: float):
         super().__init__(direction, speed, x_start, y_start)
         self.pacman_caught = False
 
-    def check_keys(self, event):
+    def check_keys(self, event: 'pygame.event.Event') -> None:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RIGHT:
                 self.next_direction = (0, 1)
@@ -254,89 +245,43 @@ class Pacman(Creature):
             elif event.key == pygame.K_DOWN:
                 self.next_direction = (1, 0)
 
-    def touches_coin(self):
-        i, j = self.rounded_coordinates()
-        if observer.graphics.board[i][j] == 1:
-            observer.score.score += 10
-            observer.graphics.board[i][j] = 0
-        elif observer.graphics.board[i][j] == 2:
-            observer.score.score += 50
-            observer.graphics.board[i][j] = 0
-            observer.powerup = True
-            observer.powerup_timer = time()
-            for ghost in observer.ghosts:
-                ghost.powerup = True
 
-    def touches_ghost(self):
-        i, j = self.rounded_coordinates()
-        for ghost in observer.ghosts:
-            ghost_i = round(ghost.x / observer.graphics.cell_x_size)
-            ghost_j = round(ghost.y / observer.graphics.cell_y_size)
-            if (i == ghost_i) and (j == ghost_j):
-                if (not ghost.powerup) and (not ghost.dead):
-                    stop_playing_sound(observer.sounds.game_music)
-                    observer.score.lives -= 1
-                    if observer.score.lives < 0:
-                        observer.game_over = True
-                    else:
-                        observer.powerup = False
-                        self.pacman_caught = True
-                        self.direction = (0, 1)
-                        self.next_direction = (0, 1)
-                        observer.graphics.pacman_image_number = 0
-                        self.x = self.x_start
-                        self.y = self.y_start
-                        for ghost1 in observer.ghosts:
-                            ghost1.x = ghost1.x_start
-                            ghost1.y = ghost1.y_start
-                            ghost1.powerup = False
-                            ghost1.dead = False
-                            ghost1.first_change_direction_after_powerup = True
-                    play_the_sound_stop_everything_else(observer.sounds.death_sound)
-                    return
-                else:
-                    if not ghost.dead:
-                        observer.score.score += observer.score.score_for_eating_ghost
-                        pygame.display.flip()
-                        timer = pygame.time.Clock()
-                    ghost.dead = True
-
-
-def more(a, b):
+def more(a: int, b: int) -> bool:
     return a > b
 
 
-def less(a, b):
+def less(a: int, b: int) -> bool:
     return a < b
 
 
 class Ghost(Creature):
-    def __init__(self, direction, speed, x_start, y_start):
+    def __init__(self, direction: tuple, speed: float, x_start: float, y_start: float):
         super().__init__(direction, speed, x_start, y_start)
         self.dead = False
         self.first_change_direction_after_powerup = False
         self.powerup = False
 
-    def change_next_direction_if_dead(self):
-        i, j = self.rounded_coordinates()
+    def change_next_direction_if_dead(self, pacman: 'Pacman', graphics: 'Graphics') -> None:
+        i, j = self.rounded_coordinates(graphics)
         possible_directions = self.possible_directions[:]
         possible_directions.remove((-self.direction[0], -self.direction[1]))
-        self.change_next_direction_using_min_dist(possible_directions, True, True)
+        self.change_next_direction_using_min_dist(possible_directions, True, True, pacman, graphics)
         if (i == 15) and (j == 15):
             self.dead = False
             self.powerup = False
 
-    def choose_next_direction_using_random(self, possible_directions):
+    def change_next_direction_using_random(self, possible_directions: list, graphics: 'Graphics') -> None:
         best_direction = possible_directions[randint(0, 2)]
         for i in range(10):
-            if not self.can_move_in_direction(best_direction):
+            if not self.can_move_in_direction(best_direction, graphics):
                 best_direction = possible_directions[randint(0, 2)]
         self.next_direction = best_direction
 
-    def change_next_direction_using_min_dist(self, possible_directions, flag_powerup, flag_dead):
+    def change_next_direction_using_min_dist(self, possible_directions: list, flag_powerup: bool, flag_dead: bool,
+                                             pacman: 'Pacman', graphics: 'Graphics') -> None:
         best_direction = None
-        i, j = self.rounded_coordinates()
-        goal = observer.pacman.rounded_coordinates()
+        i, j = self.rounded_coordinates(graphics)
+        goal = pacman.rounded_coordinates(graphics)
         if flag_powerup:
             best_dist = 1000
             func = less
@@ -354,39 +299,39 @@ class Ghost(Creature):
                 best_direction = direction
         self.next_direction = best_direction
 
-    def change_next_direction_if_powerup(self):
+    def change_next_direction_if_powerup(self, pacman: 'Pacman', graphics: 'Graphics') -> None:
         possible_directions = self.possible_directions[:]
         if not self.first_change_direction_after_powerup:
             possible_directions.remove((-self.direction[0], -self.direction[1]))
         else:
             self.first_change_direction_after_powerup = False
-        i, j = self.rounded_coordinates()
+        i, j = self.rounded_coordinates(graphics)
         if randint(1, 2) == 1:
-            self.choose_next_direction_using_random(possible_directions)
+            self.change_next_direction_using_random(possible_directions, graphics)
         else:
-            self.change_next_direction_using_min_dist(possible_directions, False, False)
+            self.change_next_direction_using_min_dist(possible_directions, False, False, pacman, graphics)
         if (i == 15) and (j == 15):
             self.dead = False
             self.powerup = False
 
-    def change_next_direction_if_not_powerup_or_dead(self):
+    def change_next_direction_if_not_powerup_or_dead(self, pacman: 'Pacman', graphics: 'Graphics') -> None:
         possible_directions = self.possible_directions[:]
         possible_directions.remove((-self.direction[0], -self.direction[1]))
         if randint(1, 5) == 1:
-            self.choose_next_direction_using_random(possible_directions)
+            self.change_next_direction_using_random(possible_directions, graphics)
         else:
-            self.change_next_direction_using_min_dist(possible_directions, True, False)
+            self.change_next_direction_using_min_dist(possible_directions, True, False, pacman, graphics)
 
-    def change_next_direction(self):
+    def change_next_direction(self, pacman: 'Pacman', graphics: 'Graphics') -> None:
         if self.dead:
-            self.change_next_direction_if_dead()
+            self.change_next_direction_if_dead(pacman, graphics)
         elif self.powerup:
-            self.change_next_direction_if_powerup()
+            self.change_next_direction_if_powerup(pacman, graphics)
         else:
-            self.change_next_direction_if_not_powerup_or_dead()
+            self.change_next_direction_if_not_powerup_or_dead(pacman, graphics)
 
 
-class Observer:
+class Mediator:
     def __init__(self):
         self.graphics = Graphics()
         self.sounds = Sounds()
@@ -405,16 +350,16 @@ class Observer:
         self.game_over = False
         self.game_won = False
 
-    def start_game(self):
+    def start_game(self) -> None:
         self.game_is_on = True
         while self.game_is_on:
             self.game_is_on = False
-            observer.__init__()
+            self.__init__()
             self.game()
 
-    def game(self):
+    def game(self) -> None:
         timer = pygame.time.Clock()
-        self.graphics.draw_maze_pacman_and_ghosts()
+        self.graphics.draw_maze_pacman_and_ghosts(self.pacman, self.ghosts)
         self.graphics.draw_ready_text()
         pygame.display.flip()
         play_the_sound_stop_everything_else(self.sounds.game_start_sound)
@@ -422,8 +367,8 @@ class Observer:
         run = True
         while run:
             timer.tick(self.fps)
-            self.graphics.draw_maze_pacman_and_ghosts()
-            self.graphics.draw_misc()
+            self.graphics.draw_maze_pacman_and_ghosts(self.pacman, self.ghosts)
+            self.graphics.draw_misc(self.score.score, self.powerup, self.score.lives, self.game_over, self.game_won)
             pygame.display.flip()
             if self.pacman.pacman_caught:
                 self.graphics.draw_ready_text()
@@ -443,15 +388,69 @@ class Observer:
                     self.game_is_on = True
                     return
                 self.pacman.check_keys(event)
-            if (not observer.game_over) and (not observer.game_won):
+            if (not self.game_over) and (not self.game_won):
                 for ghost in self.ghosts:
-                    ghost.change_next_direction()
-                    ghost.move()
-                self.pacman.move()
-                self.pacman.touches_coin()
-                self.pacman.touches_ghost()
-                all_coins_collected()
+                    ghost.change_next_direction(self.pacman, self.graphics)
+                    ghost.move(self.graphics)
+                self.pacman.move(self.graphics)
+                self.touches_coin()
+                self.touches_ghost()
+                self.all_coins_collected()
+
+    def touches_ghost(self) -> None:
+        i, j = self.pacman.rounded_coordinates(self.graphics)
+        for ghost in self.ghosts:
+            ghost_i = round(ghost.x / self.graphics.cell_x_size)
+            ghost_j = round(ghost.y / self.graphics.cell_y_size)
+            if (i == ghost_i) and (j == ghost_j):
+                if (not ghost.powerup) and (not ghost.dead):
+                    stop_playing_sound(self.sounds.game_music)
+                    self.score.lives -= 1
+                    if self.score.lives < 0:
+                        self.game_over = True
+                    else:
+                        self.powerup = False
+                        self.pacman.pacman_caught = True
+                        self.pacman.direction = (0, 1)
+                        self.pacman.next_direction = (0, 1)
+                        self.graphics.pacman_image_number = 0
+                        self.pacman.x = self.pacman.x_start
+                        self.pacman.y = self.pacman.y_start
+                        for ghost1 in self.ghosts:
+                            ghost1.x = ghost1.x_start
+                            ghost1.y = ghost1.y_start
+                            ghost1.powerup = False
+                            ghost1.dead = False
+                            ghost1.first_change_direction_after_powerup = True
+                    play_the_sound_stop_everything_else(self.sounds.death_sound)
+                    return
+                else:
+                    if not ghost.dead:
+                        self.score.score += self.score.score_for_eating_ghost
+                        pygame.display.flip()
+                    ghost.dead = True
+
+    def touches_coin(self) -> None:
+        i, j = self.pacman.rounded_coordinates(self.graphics)
+        if self.graphics.board[i][j] == 1:
+            self.score.score += 10
+            self.graphics.board[i][j] = 0
+        elif self.graphics.board[i][j] == 2:
+            self.score.score += 50
+            self.graphics.board[i][j] = 0
+            self.powerup = True
+            self.powerup_timer = time()
+            for ghost in self.ghosts:
+                ghost.powerup = True
+
+    def all_coins_collected(self) -> None:
+        for i in range(len(self.graphics.board)):
+            for j in range(len(self.graphics.board[i])):
+                if self.graphics.board[i][j] in [1, 2]:
+                    return
+        self.game_won = True
+        self.sounds.game_music.stop()
 
 
-observer = Observer()
-observer.start_game()
+mediator = Mediator()
+mediator.start_game()
