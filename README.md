@@ -6,11 +6,13 @@ pygame==2.2.0
 
 Запуск:
 
+git clone git@github.com:VasVol/project_pacman.git
+
+cd project_pacman
+
 git checkout dev
 
-cd pythonProject
-
-python3 pacman.py
+python3 main.py
 
 Если ошибка из-за звука mixer, выполнить эти две строчки:
 
