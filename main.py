@@ -1,3 +1,5 @@
+import sys
+sys.path.append('src/')
 from boards import boards
 import pygame
 from math import pi
@@ -49,13 +51,13 @@ class Graphics:
         dimensions = ((self.cell_x_size + 16) * k, (self.cell_y_size + 16) * k)
         pacman_images = []
         for i in range(1, 5):
-            pacman_images.append(pygame.transform.scale(pygame.image.load(f'pacman_images/{i}.png'), dimensions))
-        red_img = pygame.transform.scale(pygame.image.load('ghost_images/red.png'), dimensions)
-        pink_img = pygame.transform.scale(pygame.image.load('ghost_images/pink.png'), dimensions)
-        blue_img = pygame.transform.scale(pygame.image.load('ghost_images/blue.png'), dimensions)
-        orange_img = pygame.transform.scale(pygame.image.load('ghost_images/orange.png'), dimensions)
-        spooked_img = pygame.transform.scale(pygame.image.load('ghost_images/spooked.png'), dimensions)
-        dead_img = pygame.transform.scale(pygame.image.load('ghost_images/dead.png'), dimensions)
+            pacman_images.append(pygame.transform.scale(pygame.image.load(f'images/pacman_images/{i}.png'), dimensions))
+        red_img = pygame.transform.scale(pygame.image.load('images/ghost_images/red.png'), dimensions)
+        pink_img = pygame.transform.scale(pygame.image.load('images/ghost_images/pink.png'), dimensions)
+        blue_img = pygame.transform.scale(pygame.image.load('images/ghost_images/blue.png'), dimensions)
+        orange_img = pygame.transform.scale(pygame.image.load('images/ghost_images/orange.png'), dimensions)
+        spooked_img = pygame.transform.scale(pygame.image.load('images/ghost_images/spooked.png'), dimensions)
+        dead_img = pygame.transform.scale(pygame.image.load('images/ghost_images/dead.png'), dimensions)
         ghosts_images = [red_img, pink_img, blue_img, orange_img]
         return pacman_images, ghosts_images, spooked_img, dead_img
 
@@ -169,9 +171,9 @@ def stop_playing_sound(sound: 'pygame.mixer.Sound') -> None:
 class Sounds:
     def __init__(self):
         mixer.init()
-        self.game_music = mixer.Sound('sounds/siren_2.wav')
-        self.game_start_sound = mixer.Sound('sounds/game_start.wav')
-        self.death_sound = mixer.Sound('sounds/death_1.wav')
+        self.game_music = mixer.Sound('audio/siren_2.wav')
+        self.game_start_sound = mixer.Sound('audio/game_start.wav')
+        self.death_sound = mixer.Sound('audio/death_1.wav')
 
 
 class Creature:
