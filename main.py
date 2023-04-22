@@ -283,13 +283,13 @@ class Pacman(Creature):
 
     def check_keys(self, event: 'pg.event.Event') -> None:
         if event.type == pg.KEYDOWN:
-            if event.key == pg.K_RIGHT:
+            if event.key in [pg.K_RIGHT, pg.K_d]:
                 self.next_direction = (0, 1)
-            elif event.key == pg.K_LEFT:
+            elif event.key in [pg.K_LEFT, pg.K_a]:
                 self.next_direction = (0, -1)
-            elif event.key == pg.K_UP:
+            elif event.key in [pg.K_UP, pg.K_w]:
                 self.next_direction = (-1, 0)
-            elif event.key == pg.K_DOWN:
+            elif event.key in [pg.K_DOWN, pg.K_s]:
                 self.next_direction = (1, 0)
 
 
