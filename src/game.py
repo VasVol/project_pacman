@@ -1,4 +1,4 @@
-from src import Globals
+from src import Globals as Gl
 from src.game_boards import boards
 from src.create_min_dist import min_dist
 import pygame as pg
@@ -11,11 +11,11 @@ from time import time
 
 class Score:
     def __init__(self):
-        self.score_for_eating_small_coin = Globals.score_for_small_coin
-        self.score_for_eating_big_coin = Globals.score_for_big_coin
-        self.score_for_eating_ghost = Globals.score_for_eating_ghost
+        self.score_for_eating_small_coin = Gl.score_for_small_coin
+        self.score_for_eating_big_coin = Gl.score_for_big_coin
+        self.score_for_eating_ghost = Gl.score_for_eating_ghost
         self.score = 0
-        self.lives = Globals.stating_number_of_lives
+        self.lives = Gl.stating_number_of_lives
 
 
 class Graphics:
@@ -23,23 +23,23 @@ class Graphics:
         pg.init()
         self.board = deepcopy(boards[0])
         self.window_x_size = self.window_y_size = min(
-            pg.display.get_desktop_sizes()[0]) * Globals.window_size_k
-        self.stretch_factor = self.window_x_size / Globals.standart_window_size
+            pg.display.get_desktop_sizes()[0]) * Gl.window_size_k
+        self.stretch_factor = self.window_x_size / Gl.standard_window_size
         self.cell_x_size = self.window_x_size / len(self.board)
         self.cell_y_size = self.window_y_size / len(self.board[0])
-        self.space = Globals.space_size * self.stretch_factor
-        self.font_size = Globals.font_size * self.stretch_factor
-        self.big_font_size = Globals.big_font_size * self.stretch_factor
+        self.space = Gl.space_size * self.stretch_factor
+        self.font_size = Gl.font_size * self.stretch_factor
+        self.big_font_size = Gl.big_font_size * self.stretch_factor
         self.screen = pg.display.set_mode([self.window_x_size,
                                            self.window_y_size + self.space])
         self.font = pg.font.Font('freesansbold.ttf', round(self.font_size))
         self.big_font = pg.font.Font('freesansbold.ttf',
                                      round(self.big_font_size))
-        self.flicker_speed = Globals.flicker_speed
+        self.flicker_speed = Gl.flicker_speed
         self.pacman_images, self.ghosts_images, self.spooked_img, \
             self.dead_img = self.get_images()
         self.change_pacman_image_counter = 0
-        self.change_pacman_image_speed = Globals.change_pacman_image_speed
+        self.change_pacman_image_speed = Gl.change_pacman_image_speed
         self.pacman_image_number = 0
         self.flicker = False
         self.flicker_counter = 0
@@ -52,10 +52,10 @@ class Graphics:
 
     def get_images(self) -> tuple:
         k = self.stretch_factor
-        dimensions = ((self.cell_x_size + Globals.images_coefficient) * k,
-                      (self.cell_y_size + Globals.images_coefficient) * k)
+        dimensions = ((self.cell_x_size + Gl.images_coefficient) * k,
+                      (self.cell_y_size + Gl.images_coefficient) * k)
         pacman_images = []
-        for i in range(1, Globals.number_of_pacman_images):
+        for i in range(1, Gl.number_of_pacman_images):
             pacman_images.append(pg.transform.scale(
                 pg.image.load(f'images/pacman_images/{i}.png'), dimensions))
         red_img = pg.transform.scale(
@@ -80,13 +80,16 @@ class Graphics:
                   game_won: bool) -> None:
         k = self.stretch_factor
         score_text = self.font.render(f'Score: {score}', True, 'white')
-        self.screen.blit(score_text, (10 * k, 920 * k))
+        self.screen.blit(score_text, stretch(Gl.score_coords, k))
         if powerup:
-            pg.draw.circle(self.screen, 'blue', (140 * k, 930 * k), 15 * k)
+            pg.draw.circle(self.screen, 'blue',
+                           stretch(Gl.powerup_circle_coords, k),
+                           stretch(Gl.powerup_circle_radius, k))
         for i in range(lives):
-            self.screen.blit(pg.transform.scale(self.pacman_images[0],
-                                                (30 * k, 30 * k)),
-                             ((650 + i * 40) * k, 915 * k))
+            self.screen.blit(pg.transform.scale(
+                self.pacman_images[0],
+                stretch((Gl.lives_k1, Gl.lives_k1), k)),
+                stretch(((Gl.lives_k2 + i * Gl.lives_k3), Gl.lives_k4), k))
         text = ''
         if game_over:
             text = self.font.render('Game over! Space bar to restart!', True,
@@ -96,17 +99,17 @@ class Graphics:
                                     'green')
         if game_over or game_won:
             pg.draw.rect(self.screen, 'white',
-                         ((50 * k, 200 * k), (800 * k, 300 * k)), 0,
-                         round(10 * k))
+                         stretch(Gl.white_rect_coords, k), 0,
+                         round(stretch(Gl.rect_line_thickness, k)))
             pg.draw.rect(self.screen, 'dark gray',
-                         ((70 * k, 220 * k), (760 * k, 260 * k)), 0,
-                         round(10 * k))
-            self.screen.blit(text, [100 * k, 300 * k])
+                         stretch(Gl.gray_rect_coords, k), 0,
+                         round(stretch(Gl.rect_line_thickness, k)))
+            self.screen.blit(text, stretch(Gl.game_finished_text_coords, k))
 
     def draw_ready_text(self) -> None:
         k = self.stretch_factor
         text = self.big_font.render('READY!', True, 'red')
-        self.screen.blit(text, (390 * k, 490 * k))
+        self.screen.blit(text, stretch(Gl.ready_text_coords, k))
 
     def draw_ghosts(self, ghosts: list['Ghost']) -> None:
         k = self.stretch_factor
@@ -156,35 +159,43 @@ class Graphics:
             for j in range(len(self.board[i])):
                 if self.board[i][j] == 1:
                     pg.draw.circle(self.screen, 'white',
-                                   ((j + 0.5) * y, (i + 0.5) * x), 4 * k)
-                if self.board[i][j] == 2 and not self.flicker:
+                                   ((j + 0.5) * y, (i + 0.5) * x),
+                                   Gl.small_coin_radius * k)
+                elif self.board[i][j] == 2 and not self.flicker:
                     pg.draw.circle(self.screen, 'white',
-                                   ((j + 0.5) * y, (i + 0.5) * x), 10 * k)
-                if self.board[i][j] == 3:
+                                   ((j + 0.5) * y, (i + 0.5) * x),
+                                   Gl.big_coin_radius * k)
+                elif self.board[i][j] == 3:
                     pg.draw.line(self.screen, 'blue', ((j + 0.5) * y, i * x),
                                  ((j + 0.5) * y, (i + 1) * x), round(3 * k))
-                if self.board[i][j] == 4:
+                elif self.board[i][j] == 4:
                     pg.draw.line(self.screen, 'blue', (j * y, (i + 0.5) * x),
                                  ((j + 1) * y, (i + 0.5) * x), round(3 * k))
-                if self.board[i][j] == 5:
+                elif self.board[i][j] == 5:
                     pg.draw.arc(self.screen, 'blue', (
-                        ((j - 0.4) * y - 2 * k, (i + 0.5) * x), (y, x)),
+                        ((j - 0.5) * y, (i + 0.5) * x), (y, x)),
                                 0, pi / 2, round(3 * k))
-                if self.board[i][j] == 6:
+                elif self.board[i][j] == 6:
                     pg.draw.arc(self.screen, 'blue',
                                 (((j + 0.5) * y, (i + 0.5) * x), (y, x)),
                                 pi / 2, pi, round(3 * k))
-                if self.board[i][j] == 7:
+                elif self.board[i][j] == 7:
                     pg.draw.arc(self.screen, 'blue',
-                                (((j + 0.5) * y, (i - 0.4) * x), (y, x)),
+                                (((j + 0.5) * y, (i - 0.5) * x), (y, x)),
                                 pi, 3 * pi / 2, round(3 * k))
-                if self.board[i][j] == 8:
+                elif self.board[i][j] == 8:
                     pg.draw.arc(self.screen, 'blue',
-                                ((((j - 0.4) * y) - 2 * k, ((i - 0.4) * x)),
-                                 (y, x)), 3 * pi / 2, 2 * pi, round(3 * k))
-                if self.board[i][j] == 9:
+                                (((j - 0.5) * y, (i - 0.5) * x), (y, x)),
+                                3 * pi / 2, 2 * pi, round(3 * k))
+                elif self.board[i][j] == 9:
                     pg.draw.line(self.screen, 'white', (j * y, (i + 0.5) * x),
                                  ((j + 1) * y, (i + 0.5) * x), round(3 * k))
+
+
+def stretch(obj, k: 'float'):
+    if isinstance(obj, (list, tuple)):
+        return type(obj)(stretch(x, k) for x in obj)
+    return obj * k
 
 
 def play_the_sound_stop_everything_else(sound: 'pg.mixer.Sound') -> None:
@@ -259,13 +270,13 @@ class Creature:
 
         if (self.y > graphics.window_y_size - 2 * graphics.cell_y_size) and (
                 self.direction == (0, 1)) and (
-                graphics.cell_x_size * Globals.move_lower_bound <= self.x <=
-                graphics.cell_x_size * Globals.move_upper_bound):
+                graphics.cell_x_size * Gl.move_lower_bound <= self.x <=
+                graphics.cell_x_size * Gl.move_upper_bound):
             self.y = 0
         if (self.y < 2 * graphics.cell_y_size) and (
                 self.direction == (0, -1)) and \
-                (graphics.cell_x_size * Globals.move_lower_bound <= self.x
-                 <= graphics.cell_x_size * Globals.move_upper_bound):
+                (graphics.cell_x_size * Gl.move_lower_bound <= self.x
+                 <= graphics.cell_x_size * Gl.move_upper_bound):
             self.y = graphics.window_y_size - graphics.cell_y_size
 
     def rounded_coordinates(self, graphics: 'Graphics') -> tuple:
@@ -314,14 +325,14 @@ class Ghost(Creature):
         possible_directions.remove((-self.direction[0], -self.direction[1]))
         self.change_next_direction_using_min_dist(possible_directions, True,
                                                   True, pacman, graphics)
-        if (i, j) == Globals.ghost_finish_when_powerup_coordinates:
+        if (i, j) == Gl.ghost_finish_when_powerup_coordinates:
             self.dead = False
             self.powerup = False
 
     def change_next_direction_using_random(self, possible_directions: list,
                                            graphics: 'Graphics') -> None:
         best_direction = possible_directions[randint(0, 2)]
-        for _ in range(Globals.random_ghost_move_number_of_attempts):
+        for _ in range(Gl.random_ghost_move_number_of_attempts):
             if not self.can_move_in_direction(best_direction, graphics):
                 best_direction = possible_directions[randint(0, 2)]
         self.next_direction = best_direction
@@ -335,13 +346,13 @@ class Ghost(Creature):
         i, j = self.rounded_coordinates(graphics)
         goal = pacman.rounded_coordinates(graphics)
         if flag_powerup:
-            best_dist = Globals.inf_for_changing_direction
+            best_dist = Gl.inf_for_changing_direction
             func = less
         else:
-            best_dist = -Globals.inf_for_changing_direction
+            best_dist = -Gl.inf_for_changing_direction
             func = more
         if flag_dead:
-            goal = Globals.ghost_finish_when_powerup_coordinates
+            goal = Gl.ghost_finish_when_powerup_coordinates
         for direction in possible_directions:
             new_i = i + direction[0]
             new_j = j + direction[1]
@@ -367,7 +378,7 @@ class Ghost(Creature):
             self.change_next_direction_using_min_dist(possible_directions,
                                                       False, False, pacman,
                                                       graphics)
-        if (i, j) == Globals.ghost_finish_when_powerup_coordinates:
+        if (i, j) == Gl.ghost_finish_when_powerup_coordinates:
             self.dead = False
             self.powerup = False
 
@@ -377,7 +388,7 @@ class Ghost(Creature):
             -> None:
         possible_directions = self.possible_directions[:]
         possible_directions.remove((-self.direction[0], -self.direction[1]))
-        if randint(1, Globals.random_ghost_move_coefficient) == 1:
+        if randint(1, Gl.random_ghost_move_coefficient) == 1:
             self.change_next_direction_using_random(possible_directions,
                                                     graphics)
         else:
@@ -401,34 +412,33 @@ class Mediator:
         self.sounds = Sounds()
         self.score = Score()
         k = self.graphics.stretch_factor
-        self.pacman = Pacman((0, 1), 2 * k, Globals.pacman_staring_coordinates[
-            0] * self.graphics.cell_x_size,
-                             Globals.pacman_staring_coordinates[
-                                 1] * self.graphics.cell_y_size)
+        self.pacman = Pacman((0, 1), 2 * k, Gl.pacman_staring_coordinates[0] *
+                             self.graphics.cell_x_size,
+                             Gl.pacman_staring_coordinates[1] *
+                             self.graphics.cell_y_size)
         self.red_ghost = Ghost((-1, 0), 2 * k,
-                               Globals.red_ghost_starting_coordinates[
-                                   0] * self.graphics.cell_x_size,
-                               Globals.red_ghost_starting_coordinates[
-                                   1] * self.graphics.cell_y_size)
+                               Gl.red_ghost_starting_coordinates[0] *
+                               self.graphics.cell_x_size,
+                               Gl.red_ghost_starting_coordinates[1] *
+                               self.graphics.cell_y_size)
         self.pink_ghost = Ghost((-1, 0), 2 * k,
-                                Globals.pink_ghost_starting_coordinates[
-                                    0] * self.graphics.cell_x_size,
-                                Globals.pink_ghost_starting_coordinates[
-                                    1] * self.graphics.cell_y_size)
+                                Gl.pink_ghost_starting_coordinates[0] *
+                                self.graphics.cell_x_size,
+                                Gl.pink_ghost_starting_coordinates[1] *
+                                self.graphics.cell_y_size)
         self.blue_ghost = Ghost((-1, 0), 2 * k,
-                                Globals.blue_ghost_starting_coordinates[
-                                    0] * self.graphics.cell_x_size,
-                                Globals.blue_ghost_starting_coordinates[
-                                    1] * self.graphics.cell_y_size)
+                                Gl.blue_ghost_starting_coordinates[0] *
+                                self.graphics.cell_x_size,
+                                Gl.blue_ghost_starting_coordinates[1] *
+                                self.graphics.cell_y_size)
         self.orange_ghost = Ghost((-1, 0), 2 * k,
-                                  Globals.orange_ghost_starting_coordinates[
-                                      0] *
+                                  Gl.orange_ghost_starting_coordinates[0] *
                                   self.graphics.cell_x_size,
-                                  Globals.orange_ghost_starting_coordinates[
-                                      1] * self.graphics.cell_y_size)
+                                  Gl.orange_ghost_starting_coordinates[1] *
+                                  self.graphics.cell_y_size)
         self.ghosts = [self.red_ghost, self.pink_ghost, self.blue_ghost,
                        self.orange_ghost]
-        self.fps = Globals.fps
+        self.fps = Gl.fps
         self.game_is_on = False
         self.powerup = False
         self.powerup_timer = 0
@@ -464,7 +474,7 @@ class Mediator:
                 self.pacman.pacman_caught = False
                 play_sound_loop(self.sounds.game_music)
             if self.powerup and (
-                    time() - self.powerup_timer > Globals.powerup_time):
+                    time() - self.powerup_timer > Gl.powerup_time):
                 self.powerup = False
                 for ghost in self.ghosts:
                     ghost.powerup = False
