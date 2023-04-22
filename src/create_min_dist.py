@@ -1,6 +1,6 @@
 import sys
 sys.path.append('src/')
-from boards import boards
+from game_boards import boards
 from collections import deque
 
 
