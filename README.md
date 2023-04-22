@@ -9,10 +9,20 @@
 git clone git@github.com:VasVol/project_pacman.git
 cd project_pacman
 git checkout dev
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 Необходимо проверить, что установлено всё из requirements.txt
 
 ## Запуск:
 ```
 python3 main.py
+```
+
+## Исправление проблем:
+Если возникает ошибка из-за звука mixer, выполнить эти две строчки:
+```
+sudo apt-get install libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev libsdl-ttf2.0-dev
+sudo sdl-config --cflags --libs
 ```
