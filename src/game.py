@@ -248,6 +248,22 @@ class Creature:
                     return True
         return False
 
+    def in_the_middle(self, graphics: 'Graphics'):
+        return graphics.cell_x_size * Gl.move_lower_bound <= self.x <=\
+            graphics.cell_x_size * Gl.move_upper_bound
+
+    def in_left_tunnel(self, graphics: 'Graphics', k: float):
+        return self.in_the_middle(graphics) and\
+            (self.y < (k - 1) * graphics.cell_y_size)
+
+    def in_right_tunnel(self, graphics: 'Graphics', k: float):
+        return self.in_the_middle(graphics) and\
+            (self.y > graphics.window_y_size - k * graphics.cell_y_size)
+
+    def in_tunnel(self, graphics: 'Graphics', k: float):
+        return self.in_left_tunnel(graphics, k) or\
+               self.in_right_tunnel(graphics, k)
+
     def can_move_in_direction(self, direction: tuple,
                               graphics: 'Graphics') -> bool:
         self.shift(direction)
@@ -262,21 +278,17 @@ class Creature:
         self.y += direction[1] * self.speed
 
     def move(self, graphics: 'Graphics') -> None:
-        if self.can_move_in_direction(self.next_direction, graphics):
+        if (self.__class__.__name__ == 'Ghost') and self.in_tunnel(graphics, 3):
+            self.shift(self.direction)
+        elif self.can_move_in_direction(self.next_direction, graphics):
             self.shift(self.next_direction)
             self.direction = self.next_direction
         elif self.can_move_in_direction(self.direction, graphics):
             self.shift(self.direction)
 
-        if (self.y > graphics.window_y_size - 2 * graphics.cell_y_size) and (
-                self.direction == (0, 1)) and (
-                graphics.cell_x_size * Gl.move_lower_bound <= self.x <=
-                graphics.cell_x_size * Gl.move_upper_bound):
+        if self.in_right_tunnel(graphics, 1) and (self.direction == (0, 1)):
             self.y = 0
-        if (self.y < 2 * graphics.cell_y_size) and (
-                self.direction == (0, -1)) and \
-                (graphics.cell_x_size * Gl.move_lower_bound <= self.x
-                 <= graphics.cell_x_size * Gl.move_upper_bound):
+        if self.in_left_tunnel(graphics, 1) and (self.direction == (0, -1)):
             self.y = graphics.window_y_size - graphics.cell_y_size
 
     def rounded_coordinates(self, graphics: 'Graphics') -> tuple:
@@ -489,7 +501,8 @@ class Mediator:
                 self.pacman.check_keys(event)
             if (not self.game_over) and (not self.game_won):
                 for ghost in self.ghosts:
-                    ghost.change_next_direction(self.pacman, self.graphics)
+                    if not ghost.in_tunnel(self.graphics, 3):
+                        ghost.change_next_direction(self.pacman, self.graphics)
                     ghost.move(self.graphics)
                 self.pacman.move(self.graphics)
                 self.touches_coin()
